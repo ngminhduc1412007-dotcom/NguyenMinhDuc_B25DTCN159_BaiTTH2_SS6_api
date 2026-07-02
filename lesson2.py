@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
 
-app = FastAPI()
-
 class AddStudent(BaseModel):
     id: int
     code: str
     name: str
     email: str
     age: int
+    
+app = FastAPI()
 
 students = [
     {"id": 1, "code": "SV001", "name": "Nguyen Van A", "email": "a@gmail.com", "age": 20},
@@ -54,46 +54,17 @@ def create_student(student: AddStudent):
         "email": student.email,
         "age": student.age
     }
-
     students.append(new_student)
-
     return {
         "message": "Create successfully",
         "data": new_student
     }
 
 @app.get("/students")
-def get_students(
-    keyword: Optional[str] = None,
-    min_age: Optional[int] = None,
-    max_age: Optional[int] = None
-):
-    result = students
-
-    if keyword:
-        keyword = keyword.lower()
-        result = [
-            student for student in result
-            if keyword in student["name"].lower()
-            or keyword in student["code"].lower()
-            or keyword in student["email"].lower()
-        ]
-
-    if min_age is not None:
-        result = [
-            student for student in result
-            if student["age"] >= min_age
-        ]
-
-    if max_age is not None:
-        result = [
-            student for student in result
-            if student["age"] <= max_age
-        ]
-
+def get_student():
     return {
-        "message": "Get students successfully",
-        "data": result
+        "message": "All student in list",
+        "data": students
     }
 
 @app.get("/students/{student_id}")
@@ -113,7 +84,6 @@ def get_student_by_id(student_id: int):
 @app.put("/students/{student_id}")
 def update_student(student_id: int, student: AddStudent):
     target_student = None
-
     for s in students:
         if s["id"] == student_id:
             target_student = s
@@ -157,7 +127,6 @@ def update_student(student_id: int, student: AddStudent):
     target_student["name"] = student.name
     target_student["email"] = student.email
     target_student["age"] = student.age
-
     return {
         "message": "Update successfully",
         "data": target_student
@@ -176,4 +145,21 @@ def delete_student(student_id: int):
     return {
         "message": "Student not found",
         "data": None
+    }
+    
+@app.get("/students/search")
+def search_students(keyword: Optional[str] = None, min_age: Optional[int] = None, max_age: Optional[int] = None):
+    result = students
+    if keyword:
+        keyword = keyword.lower()
+        result = [student for student in result if keyword in student["name"].lower() or keyword in student["code"].lower() or keyword in student["email"].lower()]
+
+    if min_age is not None:
+        result = [student for student in result if student["age"] >= min_age]
+
+    if max_age is not None:
+        result = [student for student in result if student["age"] <= max_age]
+    return {
+        "message": "Get students successfully",
+        "data": result
     }
